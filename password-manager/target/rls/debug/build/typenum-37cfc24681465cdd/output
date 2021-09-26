@@ -1,0 +1,2 @@
+cargo:rustc-env=TYPENUM_BUILD_CONSTS=d:\git\password-manager\password-manager\target\rls\debug\build\typenum-37cfc24681465cdd\out\consts.rs
+cargo:rustc-env=TYPENUM_BUILD_OP=d:\git\password-manager\password-manager\target\rls\debug\build\typenum-37cfc24681465cdd\out\op.rs
