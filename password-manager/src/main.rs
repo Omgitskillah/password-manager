@@ -1,106 +1,114 @@
-use aes::{Aes256, Block, ParBlocks};
-use aes::cipher::{
-    BlockCipher, BlockEncrypt, BlockDecrypt, NewBlockCipher,
-    generic_array::GenericArray,
-};
-use hex::encode;
-use json::object;
-use sha2::{Sha256, Digest};
+static url_request:&str ="the URL";
+static username_request:&str ="your Username";
+static password_request:&str ="your Password";
+static wallet_id_request:&str ="your Wallet ID";
+static secret_key_request:&str ="your Secret Key";
 
-struct Credentials
+static url_json_key:&str ="URL";
+static username_json_key:&str ="Username";
+static password_json_key:&str ="Password";
+static wallet_id_json_key:&str ="WalletID";
+static secret_key_json_key:&str ="SecretKey";
+
+
+fn request_vault_credentials( request:&str ) -> String
 {
-    in_json:String,
-    hash:String
+    let mut vault_credentials = String::new();
+
+    println!("Enter {}:", request);
+    std::io::stdin().read_line(&mut vault_credentials).unwrap();
+
+    return vault_credentials;
 }
 
+fn generate_credentials_json_string( json_key_1:&str, json_value_1:String, json_key_2:&str, json_value_2:String ) -> String
+{
+    use json::object;
 
-fn main() {
-    let credentials = get_username_and_password();
-    let vault_credentials = get_vault_credentials();
+    let credentials_json_object = object!{
+        json_key_1 => json_value_1,
+        json_key_2 => json_value_2
+    };
+
+    return credentials_json_object.to_string();
 }
-
-
-
-// fn encrypt_credentials( credentials:String, key:String ) -> String 
-// {
-//     let mut block = Block::default();
-//     let key_bytes = key.as_bytes();
-
-//     let cipher = Aes256::new(&key_bytes);
-
-// }
 
 fn generate_hash(text:String) -> String
 {
+    use sha2::{Sha256, Digest};
+
     let mut hasher = Sha256::new();
     hasher.update(text.as_bytes());
-
-    let result = hasher.finalize();
-    let output = hex::encode(result);
+    let result_array = hasher.finalize();
+    let output = hex::encode(result_array);
 
     return output;
 }
 
-fn get_vault_credentials() -> Credentials
+fn encrypt_password( password:String, aes_key:String ) -> String
 {
-    let mut wallet_id = String::new();
-    let mut secret_key = String::new();
-
-    println!("Enter wallet ID:");
-    std::io::stdin().read_line(&mut wallet_id).unwrap();
-    println!("Enter your secret key:");
-    std::io::stdin().read_line(&mut secret_key).unwrap();
-
-    let vault_credentials_json_object = object!{
-        "wallet_id" => wallet_id.clone(),
-        "secret_key" => secret_key.clone(),
+    use aes::{Aes128, Block};
+    use aes::cipher::{BlockEncrypt, NewBlockCipher,
+        generic_array::GenericArray,
     };
 
-    let vault_credentials_json_string = vault_credentials_json_object.to_string();
-    println!("VAULT JSON STRING: {}", vault_credentials_json_string);
+    let key = GenericArray::from_slice(&aes_key.as_bytes());
+    let mut password_padded = format!("{:width$}", password, width=16);
+    let mut password_padded_bytes = password_padded.as_bytes();
 
-    let vault_credentials_hash = generate_hash( vault_credentials_json_string.clone() );
-    println!("VAULT CREDENTIALS HASH: {}", vault_credentials_hash);
+    let mut block = Block::clone_from_slice(&password_padded_bytes);
+    let cipher = Aes128::new(&key);
+    cipher.encrypt_block(&mut block);
+    let encrypted_string = hex::encode(block.clone());
 
-    let vault_credentials_to_store = Credentials {
-        in_json: String::from(vault_credentials_json_string),
-        hash: String::from(vault_credentials_hash)
-    };
-
-    return vault_credentials_to_store;
+    return encrypted_string;
 }
 
-fn get_username_and_password() -> Credentials
+fn decrypt_password( encrypted_password:String, aes_key:String ) -> String
 {
-    let mut url = String::new();
-    let mut uname = String::new();
-    let mut pwd = String::new();
-
-    println!("Enter the URL to manage:");
-    std::io::stdin().read_line(&mut url).unwrap();
-    println!("Enter your Username:");
-    std::io::stdin().read_line(&mut uname).unwrap();
-    println!("Enter your password:");
-    std::io::stdin().read_line(&mut pwd).unwrap();
-
-    let credentials_json_object = object!{
-        "url" => url.clone(),
-        "username" => uname.clone(),
-        "password" => pwd.clone()
-    };
-    
-    let credentials_json_string = credentials_json_object.to_string();
-
-    println!("CREDENTIALS JSON STRING: {}", credentials_json_string);
-    
-    let credentials_hash = generate_hash( credentials_json_string.clone() );
-
-    println!("CREDENTIALS HASH: {}", credentials_hash);
-
-    let credentials_to_store = Credentials {
-        in_json: String::from(credentials_json_string),
-        hash: String::from(credentials_hash)
+    use std::str;
+    use aes::{Aes128, Block};
+    use aes::cipher::{BlockDecrypt, NewBlockCipher,
+        generic_array::GenericArray,
     };
 
-    return credentials_to_store;
+    let key = GenericArray::from_slice(&aes_key.as_bytes());
+    let mut retrieved_slice = [0u8; 16];
+    hex::decode_to_slice(encrypted_password, &mut retrieved_slice as &mut [u8]);
+
+    let mut decrypt_block = Block::clone_from_slice(&retrieved_slice);
+
+    let cipher = Aes128::new(&key);
+
+    cipher.decrypt_block(&mut decrypt_block);
+
+    let decrypted_password = str::from_utf8(&decrypt_block).unwrap();
+
+    return String::from(decrypted_password);
+}
+
+fn store_encrypted_password( encrypted_password:String, vault_name:String )
+{
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    let mut vault = File::create(format!("{}{}", vault_name, ".pwd")).expect("Could not create file");
+    vault.write_all(&mut encrypted_password.as_bytes()).expect("Could not write to file");
+}
+
+fn retrieve_encrypted_password( vault_name:String ) -> String 
+{
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    let mut retrieved_vault = File::open(format!("{}{}", vault_name, ".pwd")).expect("Could not create file");
+    let mut retrieved_encrypted_password = String::new();
+    retrieved_vault.read_to_string(&mut retrieved_encrypted_password).expect("Could not read file");
+
+    return retrieved_encrypted_password;
+}
+
+fn main() 
+{
+    /* now implement the storage process!!! */
 }
