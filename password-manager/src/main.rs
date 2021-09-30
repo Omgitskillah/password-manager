@@ -72,7 +72,7 @@ fn request_vault_credentials( request:&str ) -> String
 {
     let mut vault_credentials = String::new();
 
-    println!("Enter {}:", request);
+    println!("\nEnter {}:", request);
     std::io::stdin().read_line(&mut vault_credentials).unwrap();
     
     return vault_credentials.trim().to_string();
@@ -165,7 +165,14 @@ fn store_encrypted_password( encrypted_password:String, vault_name:String )
     use std::fs::File;
     use std::io::prelude::*;
 
-    let mut vault = File::create(format!("{}{}", vault_name, ".pwd")).expect("Could not create file");
+    let mut vault = match File::create(format!("{}{}", vault_name, ".pwd")) {
+        Ok(vault) => vault,
+        _ => {
+            println!("\n**********************\nCould Not create Vault\n**********************\n");
+            std::process::exit(0);
+        }
+    };
+
     vault.write_all(&mut encrypted_password.as_bytes()).expect("Could not write to file");
 }
 
@@ -174,9 +181,18 @@ fn retrieve_encrypted_password( vault_name:String ) -> String
     use std::fs::File;
     use std::io::prelude::*;
 
-    let mut retrieved_vault = File::open(format!("{}{}", vault_name, ".pwd")).expect("Could not create file");
+    let mut retrieved_vault = match File::open(format!("{}{}", vault_name, ".pwd")) {
+        Ok(retrieved_vault) => retrieved_vault,
+        _ => {
+            println!("\n*****************\nVault Unavailable\n*****************\n");
+            std::process::exit(0);
+        }
+    };
+
     let mut retrieved_encrypted_password = String::new();
     retrieved_vault.read_to_string(&mut retrieved_encrypted_password).expect("Could not read file");
+
+    println!("Password: -----> {}", retrieved_encrypted_password );
 
     return retrieved_encrypted_password;
 }
