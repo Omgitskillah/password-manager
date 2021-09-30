@@ -11,7 +11,7 @@ Because of its expected affordability, it will be possible to run low cost user 
 The application only runs on the command line for now but can be wrapped modified to run on a browser, a desktop or on a mobile app. 
 The application taked in various credentials and encrypts the password for storage, currently on the local machine and later on the Radix Distribute Ledger.
 
-Donload and run `password-manager.exe`. You may need Admin previlages to run this executable
+Donload and run `password-manager.exe` from `password-manager/target/release/`. You may need Admin previlages to run this executable
 
 ### How to storing a password works
 When you choose the save password option from the application command line menu, you will be required to enter the `URL` or `Application Name` for which you would like to encrypt and store its password. 
