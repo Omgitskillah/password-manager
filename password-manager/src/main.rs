@@ -1,3 +1,18 @@
+static SPLASH_SCREEN:&str =
+"
+****************************************************************
+**  ______   __    __  ______    __    __  __   __    ____    **
+** |   _  \\ |  |/\\|  ||   _  \\  |  \\  /  ||  \\ |  | /  ___|   **
+** |  |_|  ||        ||  | \\  | |   \\/   ||   \\|  ||  /  ___  **
+** |   ___/ |   /\\   ||  |_/  | |     |  ||  |\\   ||  \\_/  _| **
+** |__|     |__/  \\__||_____ /  |__|\\/|__||__| \\__| \\_____/   **
+**                                                            **
+**          SIMPLE PASSWORD MANAGER WRITTEN IN RUST           **
+**              By Jeff Myers & Clarence Alucho               **
+****************************************************************
+"
+;
+
 const TOTAL_APP_STATES: usize = 14;
 const PASSWORD_VAULT_OFFSET: usize = 3;
 // TOTAL_APP_STATES is the total number of 
@@ -380,5 +395,6 @@ fn choose_application_path()
 
 fn main() 
 {
+    println!("{}",SPLASH_SCREEN);
     choose_application_path();
 }
