@@ -1,2 +1,3 @@
-password-manager/target/
+password-manager/target/*
+!password-manager/target/release/password-manager.exe
 *.pwd
