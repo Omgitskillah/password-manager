@@ -29,6 +29,6 @@ Your password `*if found` will be displayed on the command line.
 
 
 
-`NOTES: *password, to store can only be a max of 16 characters in length`  
+`NOTES: *password, to store can only be a max of 13 characters in length`  
 
 `NOTES: *if found, it is possible to request a password that doesn't exist, because the application has no knowledge of what is stored after the fact, retrieving the password will necessitate that you provide the exact same credentials you gave while storing your password`
