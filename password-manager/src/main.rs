@@ -56,6 +56,7 @@ enum ApplicationPath
 }
 
 static APPLICATION_PATH_REQUEST:&str ="[s] to create vault, [r] to Retrieve vault or [e] to Exit";
+static APPLICATION_EXIT_REQUEST:&str ="any key to Exit";
 
 static URL_REQUEST:&str ="URL";
 static USERNAME_REQUEST:&str ="Username";
@@ -68,12 +69,21 @@ static USERNAME_JSON_KEY:&str ="Username";
 static WALLET_ID_JSON:&str ="WalletID";
 static SECRET_KEY_JSON_KEY:&str ="SecretKey";
 
-fn request_vault_credentials( request:&str ) -> String
+fn request_vault_credentials( request:&str, hide:bool ) -> String
 {
     let mut vault_credentials = String::new();
-
-    println!("\nEnter {}:", request);
-    std::io::stdin().read_line(&mut vault_credentials).unwrap();
+    let req_message = format!("\nEnter {}:", request);
+    
+    if hide
+    {
+        vault_credentials = rpassword::read_password_from_tty(Some(&req_message)).unwrap();
+        println!("{:*>width$}", "", width=vault_credentials.len());
+    }
+    else
+    {
+        println!("{}", req_message);
+        std::io::stdin().read_line(&mut vault_credentials).unwrap();
+    }
     
     return vault_credentials.trim().to_string();
 }
@@ -254,7 +264,7 @@ fn choose_application_path()
     }
 
     // get the path to follow
-    let application_path = process_application_path_input( request_vault_credentials(APPLICATION_PATH_REQUEST) );
+    let application_path = process_application_path_input( request_vault_credentials(APPLICATION_PATH_REQUEST, false) );
 
     // load the path states
     match application_path
@@ -266,12 +276,12 @@ fn choose_application_path()
 
         ApplicationPath::Store =>
         {
-            app_state[0] = ApplicationStates::GetUrl;
-            app_state[1] = ApplicationStates::GetUname;
-            app_state[2] = ApplicationStates::GetUrlAndUnameHash;
-            app_state[3] = ApplicationStates::GetPwd;
-            app_state[4] = ApplicationStates::GetWalletID;
-            app_state[5] = ApplicationStates::GetSecretKey;
+            app_state[0] = ApplicationStates::GetWalletID;
+            app_state[1] = ApplicationStates::GetSecretKey;
+            app_state[2] = ApplicationStates::GetUrl;
+            app_state[3] = ApplicationStates::GetUname;
+            app_state[4] = ApplicationStates::GetUrlAndUnameHash;
+            app_state[5] = ApplicationStates::GetPwd;
             app_state[6] = ApplicationStates::GetIdAndSecretHash;
             app_state[7] = ApplicationStates::EncryptPwd;
             app_state[8] = ApplicationStates::SavePwd;
@@ -280,11 +290,11 @@ fn choose_application_path()
 
         ApplicationPath::Retrieve =>
         {
-            app_state[0] = ApplicationStates::GetUrl;
-            app_state[1] = ApplicationStates::GetUname;
-            app_state[2] = ApplicationStates::GetUrlAndUnameHash;
-            app_state[3] = ApplicationStates::GetWalletID;
-            app_state[4] = ApplicationStates::GetSecretKey;
+            app_state[0] = ApplicationStates::GetWalletID;
+            app_state[1] = ApplicationStates::GetSecretKey;
+            app_state[2] = ApplicationStates::GetUrl;
+            app_state[3] = ApplicationStates::GetUname;
+            app_state[4] = ApplicationStates::GetUrlAndUnameHash;
             app_state[5] = ApplicationStates::GetIdAndSecretHash;
             app_state[6] = ApplicationStates::RetrievePwd;
             app_state[7] = ApplicationStates::DecryptPwd;
@@ -313,12 +323,12 @@ fn choose_application_path()
         {
             ApplicationStates::GetUrl => 
             {
-                vault_instance.url = request_vault_credentials(URL_REQUEST);
+                vault_instance.url = request_vault_credentials(URL_REQUEST, false);
 
             },
             ApplicationStates::GetUname => 
             {
-                vault_instance.username = request_vault_credentials(USERNAME_REQUEST);
+                vault_instance.username = request_vault_credentials(USERNAME_REQUEST, false);
             },
             ApplicationStates::GetUrlAndUnameHash => 
             {
@@ -330,15 +340,15 @@ fn choose_application_path()
             },
             ApplicationStates::GetPwd => 
             {
-                vault_instance.password = request_vault_credentials(PASSWORD_REQUEST);
+                vault_instance.password = request_vault_credentials(PASSWORD_REQUEST, true);
             },
             ApplicationStates::GetWalletID =>
             {
-                vault_instance.wallet_id = request_vault_credentials(WALLET_ID_REQUEST);
+                vault_instance.wallet_id = request_vault_credentials(WALLET_ID_REQUEST, false);
             },
             ApplicationStates::GetSecretKey =>
             {
-                vault_instance.secret_key = request_vault_credentials(SECRET_KEY_REQUEST);
+                vault_instance.secret_key = request_vault_credentials(SECRET_KEY_REQUEST, true);
             },
             ApplicationStates::GetIdAndSecretHash =>
             {
@@ -407,6 +417,17 @@ fn choose_application_path()
                 vault_instance.secret_key,
                 vault_instance.secret_hash);
     */
+
+    // wait for exit comman
+    let exit_request = request_vault_credentials(APPLICATION_EXIT_REQUEST, false);
+    match exit_request
+    {
+        _ =>
+        {
+            terminate_app();
+        },
+    };
+
 }
 
 fn main() 
