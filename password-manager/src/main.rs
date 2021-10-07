@@ -62,7 +62,7 @@ static URL_REQUEST:&str ="URL";
 static USERNAME_REQUEST:&str ="Username";
 static PASSWORD_REQUEST:&str ="Password";
 static WALLET_ID_REQUEST:&str ="Wallet ID";
-static SECRET_KEY_REQUEST:&str ="Secret Key";
+static SECRET_KEY_REQUEST:&str ="Master Password";
 
 static URL_JSON_KEY:&str ="URL";
 static USERNAME_JSON_KEY:&str ="Username";
